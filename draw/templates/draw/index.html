@@ -33,37 +33,45 @@
     var p1 = new paper.Point(0, 0);
     var p2 = new paper.Point(0, 0);
     path.strokeColor = colorCode;
+    var display = false;
 
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
+
+    if (url.indexOf("size=large") >= 0) {
+        display = true;
+    }
 
     var socket = new WebSocket(
         'ws://' + window.location.host + '/ws/draw');
 
     tool.onMouseMove = function(event) { //http://paperjs.org/reference/tool/ path examples
-       path.add(event.point);
-       // You may need to add code here if you want to pass any other information.
-       socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + ", \"red\" : " + red + ", \"green\" : " + green + ", \"blue\" : " + blue + "}");
-       
-       
-       
+        if (display == false) {
+            
+            path.add(event.point);
+            // You may need to add code here if you want to pass any other information.
+            socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + ", \"red\" : " + red + ", \"green\" : " + green + ", \"blue\" : " + blue + "}");
+            
+        }
     }
 
     socket.onmessage = function(receivedMessage) {
-        var received = JSON.parse(receivedMessage.data);
-        // You will probably want to add some code here to draw more lines.
-        if (received.uid != uid) {
-            p2 = new paper.Point(received.x, received.y);
-            
-            if (p1.x != 0 || p1.y != 0) {
-                var path2 = new paper.Path();
-                path2.add(p1);
-                path2.add(p2);
-                path2.strokeColor = new paper.Color(received.red, received.green, received.blue);
-                path.add(path2);
-            }
+        if (display == true) {
+            var received = JSON.parse(receivedMessage.data);
+            // You will probably want to add some code here to draw more lines.
+            if (received.uid != uid) {
+                p2 = new paper.Point(received.x, received.y);
+                
+                if (p1.x != 0 || p1.y != 0) {
+                    var path2 = new paper.Path();
+                    path2.add(p1);
+                    path2.add(p2);
+                    path2.strokeColor = new paper.Color(received.red, received.green, received.blue);
+                    path.add(path2);
+                }
 
-            p1 = p2;
+                p1 = p2;
+            }
         }
     }
 
